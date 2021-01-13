@@ -10,6 +10,7 @@ plotNormalHistogram(CFA$Sales)
 plotNormalHistogram(CFA$NormDT)
 plotNormalHistogram(CFA$MobDT)
 
+#OBJECTIVE 1: To reflect on how successful CFA has evolved to fit the new norm (drive-thru only)
 bartlett.test(Sales ~ Time, data = CFA) #Does meet the assumption
 fligner.test(Sales ~ Time, data = CFA) #Does meet the assumption
 
@@ -52,3 +53,8 @@ pairwise.t.test(CFA$MobDT, CFA$Time, p.adjust="bonferroni")
 MOBmeans <- CFA %>% group_by(Time) %>% summarize(Mean = mean(MobDT))
 MOBmeans
   #CONCLUSION: The average increased from $7,300/day before Covid to $25,500/day after the lockdown.
+
+#OBJECTIVE 2: To analyze how labor costs have been affected by Covid? 
+  #This will be calculated by looking at the percent of sales were spent on labor and by seeing how productivity for each month changes over time.
+
+#OBJECTIVE 3: To show the difference in how people are ordering.
