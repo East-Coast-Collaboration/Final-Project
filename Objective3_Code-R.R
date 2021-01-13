@@ -45,7 +45,7 @@ CFA_data1mx=as.matrix(CFA_data1)
 
 mshapiro.test(t(CFA_data1mx))
 
-# did not pass - p was significant - proceed to Levenes Test
+# did not pass - p was significant - proceed to homogeneity of variance
 
 leveneTest(MobCO~Time,data=CFA_data)
 leveneTest(MobDI~Time,data=CFA_data)
@@ -101,3 +101,7 @@ cor.test(CFA_data$DineIn,CFA_data$Catering,method="pearson",use="complete.obs")
 
 MANOVA = manova(cbind(MobCO,MobDI,MobDT,NormDT,CarryO,ThirdParty,DineIn,Catering)~Time, data = CFA_data)
 summary(MANOVA)
+
+## post Hoc
+
+summary.aov(MANOVA, test="wilks")
