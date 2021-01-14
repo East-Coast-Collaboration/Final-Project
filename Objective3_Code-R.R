@@ -96,8 +96,12 @@ cor.test(CFA_data$CarryO,CFA_data$DineIn,method="pearson",use="complete.obs") # 
 cor.test(CFA_data$CarryO,CFA_data$Catering,method="pearson",use="complete.obs")
 cor.test(CFA_data$DineIn,CFA_data$Catering,method="pearson",use="complete.obs")
 
+corr_matrix <- cor(CFA_data)
 
 ## do analysis anyway
 
 MANOVA = manova(cbind(MobCO,MobDI,MobDT,NormDT,CarryO,ThirdParty,DineIn,Catering)~Time, data = CFA_data)
 summary(MANOVA)
+
+summary.aov(MANOVA, test = "wilks")
+  
