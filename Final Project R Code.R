@@ -2,9 +2,17 @@
 library("dplyr")
 library("rcompanion")
 library("car")
+library("mvnormtest")
+library("IDPmisc")
 
 CFA <- CFA_data
   #Changed name of data set to something more convenient
+##### Question? how does this work on Github with running code if we put the lines I used to run the code?
+##### will it run/load the data file on your computer? Your code ran fine on mine.
+##library(readxl)
+##CFA <- read_excel("C:/GitHubProjects/Final-Project/CFA_data.xlsx")
+##View(CFA)
+
 
 plotNormalHistogram(CFA$Sales)
 plotNormalHistogram(CFA$NormDT)
@@ -54,7 +62,97 @@ MOBmeans <- CFA %>% group_by(Time) %>% summarize(Mean = mean(MobDT))
 MOBmeans
   #CONCLUSION: The average increased from $7,300/day before Covid to $25,500/day after the lockdown.
 
-#OBJECTIVE 2: To analyze how labor costs have been affected by Covid? 
+###  OBJECTIVE 2: ANALYZE HOW LABOR COSTS HAVE BEEN AFFECTED BY COVID. 
   #This will be calculated by looking at the percent of sales were spent on labor and by seeing how productivity for each month changes over time.
 
-#OBJECTIVE 3: To show the difference in how people are ordering.
+###  OBJECTIVE 3: SHOW THE DIFFERENCE IN HOW PEOPLE ARE ORDING.
+
+
+# a little data wrangling for Obj 3
+
+names(CFA)[names(CFA)=="3rdParty"]="ThirdParty"
+head(CFA)
+
+# make sure DV's are numeric
+
+str(CFA$MobCO)
+str(CFA$MobDI)
+str(CFA$MobDT)
+str(CFA$NormDT)
+str(CFA$CarryO)
+str(CFA$ThirdParty)
+str(CFA$DineIn)
+str(CFA$Catering)
+
+# recode IV to be numeric
+
+CFA$TimeR=NA
+CFA$TimeR[CFA$Time=="Before"]=1
+CFA$TimeR[CFA$Time=="During"]=2
+CFA$TimeR[CFA$Time=="After"]=3
+
+# subset and make a matrix
+
+keeps=c("MobCO","MobDI","MobDT",'NormDT',"CarryO","ThirdParty","DineIn","Catering")
+CFA1=CFA[keeps]
+CFA1mx=as.matrix(CFA1)
+
+## Test assumptions
+
+## Sample size
+
+## Multivariate Normality
+
+mshapiro.test(t(CFA1mx))  #did not pass - p was significant
+
+## Homogeneity of Variance
+
+leveneTest(MobCO~Time,data=CFA)  # did not pass
+leveneTest(MobDI~Time,data=CFA)  # did not pass
+leveneTest(MobDT~Time,data=CFA)  # did not pass
+leveneTest(NormDT~Time,data=CFA)  # passed 
+leveneTest(CarryO~Time,data=CFA)  # did not pass
+leveneTest(ThirdParty~Time,data=CFA)  # passed
+leveneTest(DineIn~Time,data=CFA)  # did not pass
+leveneTest(Catering~Time,data=CFA)  # passed
+
+## Absense of Multicolinearity
+
+cor.test(CFA$MobCO,CFA$MobDI,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$MobDT,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$ThirdParty,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$NormDT,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$CarryO,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobCO,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$MobDI,CFA$MobDT,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDI,CFA$ThirdParty,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDI,CFA$NormDT,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDI,CFA$CarryO,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDI,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDI,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$MobDT,CFA$ThirdParty,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDT,CFA$NormDT,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDT,CFA$CarryO,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDT,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$MobDT,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$ThirdParty,CFA$NormDT,method="pearson",use="complete.obs") ## did not pass
+cor.test(CFA$ThirdParty,CFA$CarryO,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$ThirdParty,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$ThirdParty,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$NormDT,CFA$CarryO,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$NormDT,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$NormDT,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$CarryO,CFA$DineIn,method="pearson",use="complete.obs") # did not pass
+cor.test(CFA$CarryO,CFA$Catering,method="pearson",use="complete.obs") # passed
+cor.test(CFA$DineIn,CFA$Catering,method="pearson",use="complete.obs") # passed
+
+
+## MANOVA Analysis
+
+MANOVA = manova(cbind(MobCO,MobDI,MobDT,NormDT,CarryO,ThirdParty,DineIn,Catering)~Time, data = CFA)
+summary(MANOVA)
+
+## Post Hoc
+
+summary.aov(MANOVA, test="wilks")
