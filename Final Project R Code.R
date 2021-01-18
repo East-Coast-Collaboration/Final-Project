@@ -4,15 +4,13 @@ library("rcompanion")
 library("car")
 library("mvnormtest")
 library("IDPmisc")
+library("caret")
+library("gvlma")
+library("predictmeans")
+library("e1071")
 
+# Rename data for ease of typing
 CFA <- CFA_data
-  #Changed name of data set to something more convenient
-##### Question? how does this work on Github with running code if we put the lines I used to run the code?
-##### will it run/load the data file on your computer? Your code ran fine on mine.
-##library(readxl)
-##CFA <- read_excel("C:/GitHubProjects/Final-Project/CFA_data.xlsx")
-##View(CFA)
-
 
 plotNormalHistogram(CFA$Sales)
 plotNormalHistogram(CFA$NormDT)
@@ -65,6 +63,51 @@ MOBmeans
 ###  OBJECTIVE 2: ANALYZE HOW LABOR COSTS HAVE BEEN AFFECTED BY COVID. 
   #This will be calculated by looking at the percent of sales were spent on labor and by seeing how productivity for each month changes over time.
 
+# recode Time to be numeric
+
+CFA$TimeR=NA
+CFA$TimeR[CFA$Time=="Before"]=1
+CFA$TimeR[CFA$Time=="During"]=2
+CFA$TimeR[CFA$Time=="After"]=3
+
+## Test the assumptions
+# Linearity
+scatter.smooth(x=CFA$TimeR,y=CFA$Productivity, main="Poductivity through Covid")
+# it is linear
+
+#Homoscedasticity
+
+lmMod = lm(Productivity ~ TimeR,CFA)
+
+par(mfrow=c(2,2))
+plot(lmMod)
+
+lmtest::bptest(lmMod) # we have met the assumption of Homoscedasticity
+
+#Test for Homogeneity of Variance
+
+gvlma(lmMod)
+
+# Test for outliers
+
+CookD(lmMod, group=NULL,plot=TRUE, idn=3,newwd=TRUE) # three outliers, 20,25,29
+
+lev=hat(model.matrix(lmMod))
+plot(lev)
+# no outliers in x space
+
+car::outlierTest(lmMod)
+#two outliers in y space: 20,29
+
+summary(influence.measures(lmMod))
+#there are no influential outliers in the data
+
+### summarize the analysis
+
+summary(lmMod)
+
+
+
 ###  OBJECTIVE 3: SHOW THE DIFFERENCE IN HOW PEOPLE ARE ORDING.
 
 
@@ -83,13 +126,6 @@ str(CFA$CarryO)
 str(CFA$ThirdParty)
 str(CFA$DineIn)
 str(CFA$Catering)
-
-# recode IV to be numeric
-
-CFA$TimeR=NA
-CFA$TimeR[CFA$Time=="Before"]=1
-CFA$TimeR[CFA$Time=="During"]=2
-CFA$TimeR[CFA$Time=="After"]=3
 
 # subset and make a matrix
 
