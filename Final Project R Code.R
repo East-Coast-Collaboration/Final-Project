@@ -1,5 +1,4 @@
-<<<<<<< Updated upstream
-#Load Libraries
+#Load in the necessary libraries
 library("dplyr")
 library("rcompanion")
 library("car")
@@ -13,43 +12,45 @@ library("e1071")
 # Rename data for ease of typing
 CFA <- CFA_data
 
-plotNormalHistogram(CFA$Sales)
-plotNormalHistogram(CFA$NormDT)
-plotNormalHistogram(CFA$MobDT)
-
-CFA$Outside <- CFA$'3rdParty'
-plotNormalHistogram(CFA$Outside)
-
 #OBJECTIVE 1: To reflect on how successful CFA has evolved to fit the new norm (drive-thru only)
-bartlett.test(Sales ~ Time, data = CFA) #Does meet the assumption
-fligner.test(Sales ~ Time, data = CFA) #Does meet the assumption
+CFA$Outside <- CFA$'3rdParty' #recode to make easier to use
 
-bartlett.test(NormDT ~ Time, data = CFA) #Does meet the assumption
-fligner.test(NormDT ~ Time, data = CFA) #Does meet the assumption
+#Check for normality
+plotNormalHistogram(CFA$Outside) #graph is normal
+plotNormalHistogram(CFA$Sales) #graph is normal
+plotNormalHistogram(CFA$NormDT) #graph is normal
+plotNormalHistogram(CFA$MobDT) #normal, but could be better
+  #MobDT sales increased so quickly that it caused the curve to be a little flatter
 
-bartlett.test(MobDT ~ Time, data = CFA) #Does not meet the assumption
-fligner.test(MobDT ~ Time, data = CFA) #Does not meet the assumption
+#All variables seemed to be normally distributed, so will use Bartlett's test to test for Homogeneity of Variance
+bartlett.test(Sales ~ Time, data = CFA) #Passes the test
 
-bartlett.test(Outside ~ Time, data = CFA) #Does meet the assumption
-fligner.test(Outside ~ Time, data = CFA) #Does meet the assumption
+bartlett.test(NormDT ~ Time, data = CFA) #Passes the test
+
+bartlett.test(MobDT ~ Time, data = CFA) #Does not pass the test
+  #Abnormal due to the sales increasing so quickly, did not have a lot of weeks between 10 and 20 thousand in sales.
+  #Weekly MobDT sales quickly rose from between 5 and 10 thousand to more than 20 thousand a week.
+
+bartlett.test(Outside ~ Time, data = CFA) #Passes the test
 
 #ANALYZE Sales before during and after.
-  
-  #Going to try to run the ANOVA without the bonferroni adjustment, because it met the assumption with the bartlett test.
+  #Going to try to run an ANOVA with no adjustments.
 CFA_ANOVA <- aov(CFA$Sales ~ CFA$Time)
-summary(CFA_ANOVA)
+summary(CFA_ANOVA) #The test is significant.
 pairwise.t.test(CFA$Sales, CFA$Time, p.adjust="none")
+  #Looking at the results, we see that there is a significant difference in sales during the lockdown compared to before and after.
+    #Significant, because p = .0000000089 & .0000003, which is very strong.
 
   #Determine the means in order to draw conclusions:
 SALESmeans <- CFA %>% group_by(Time) %>% summarize(Mean = mean(Sales))
 SALESmeans
-  #CONCLUSION: We see that before and after stayed fairly the same, meaning we haven't increased overall sales by too much.
-    # We can also see that there was a pretty significant decrease in overall sales during the 6 week lockdown period. 
+  #CONCLUSION: We see that before and after are fairly equal, meaning we haven't increased overall sales by too much, but did not lose any.
+    # We can also see that there was a substantial decrease in overall sales during the 6 week lockdown period (about $30,000). 
 
 #ANALYZE Traditional Drive-Thru(NormDT) sales for before during and after.
-
+  #No adjustments needed
 CFA_ANOVA <- aov(CFA$NormDT ~ CFA$Time)
-summary(CFA_ANOVA)
+summary(CFA_ANOVA) #The test is significant.
 pairwise.t.test(CFA$NormDT, CFA$Time, p.adjust="none")
 
 DTmeans <- CFA %>% group_by(Time) %>% summarize(Mean = mean(NormDT))
@@ -87,7 +88,7 @@ CFA$TimeR=NA
 CFA$TimeR[CFA$Time=="Before"]=1
 CFA$TimeR[CFA$Time=="During"]=2
 CFA$TimeR[CFA$Time=="After"]=3
-
+CFA
 ## Test the assumptions
 # Linearity
 scatter.smooth(x=CFA$TimeR,y=CFA$Productivity, main="Poductivity through Covid")
@@ -123,8 +124,6 @@ summary(influence.measures(lmMod))
 ### summarize the analysis
 
 summary(lmMod)
-
-
 
 ###  OBJECTIVE 3: SHOW THE DIFFERENCE IN HOW PEOPLE ARE ORDING.
 
@@ -210,7 +209,7 @@ summary(MANOVA)
 ## Post Hoc
 
 summary.aov(MANOVA, test="wilks")
-=======
+
 #Load Libraries
 library("dplyr")
 library("rcompanion")
